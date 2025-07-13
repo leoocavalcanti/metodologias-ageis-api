@@ -40,17 +40,42 @@ jobs:
 
     - name: Setup environment variables
       run: |
-        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" >> .env
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
+        echo "PORT=3000" >> $GITHUB_ENV
+        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
+
+    - name: Create .env file
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" > .env
         echo "PORT=3000" >> .env
         echo "JWT_SECRET=test_secret" >> .env
 
+    - name: Wait for PostgreSQL
+      run: |
+        timeout=30
+        until pg_isready -h localhost -p 5432 -U postgres
+        do
+          if [ $timeout -le 0 ]; then
+            echo "Failed to connect to PostgreSQL"
+            exit 1
+          fi
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 1
+          timeout=$((timeout - 1))
+        done
+
     - name: Run database migrations
       run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
 
     - name: Start API in background
       run: npm run dev &
       env:
         NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
+        PORT: 3000
+        JWT_SECRET: test_secret
 
     - name: Wait for API to be ready
       run: |
@@ -69,6 +94,9 @@ jobs:
       run: npm run test:report
       env:
         NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
+        PORT: 3000
+        JWT_SECRET: test_secret
 
     - name: Upload test report
       uses: actions/upload-artifact@v4
