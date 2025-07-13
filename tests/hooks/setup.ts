@@ -8,6 +8,7 @@ class CustomWorld {
   apiContext!: any;
   steps: any = {};
   stepDefinitions: any = {};
+  papel?: string;
 }
 
 setWorldConstructor(CustomWorld);
