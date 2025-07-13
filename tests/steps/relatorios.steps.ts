@@ -1,11 +1,6 @@
 import { Given, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 
-interface CampoRelatorio {
-  campo: string;
-  tipo: 'texto' | 'número' | 'data';
-}
-
 Given('existe uma equipe com ID {string} no sistema', function (id: string) {
   this.equipeId = id;
 });
@@ -16,18 +11,22 @@ Then('a resposta deve conter os dados do relatório', async function () {
     expect(body).toHaveProperty('nome_projeto');
     expect(body).toHaveProperty('data_inicio');
     expect(body).toHaveProperty('progresso_total');
-  } else {
+    expect(body).toHaveProperty('tarefas_concluidas');
+    expect(body).toHaveProperty('tarefas_pendentes');
+  } else if (this.response.url().includes('/equipe/')) {
     expect(body).toHaveProperty('nome_equipe');
     expect(body).toHaveProperty('total_membros');
+    expect(body).toHaveProperty('tarefas_concluidas_mes');
+    expect(body).toHaveProperty('media_tempo_conclusao');
     expect(body).toHaveProperty('desempenho_geral');
   }
 });
 
 Then('o relatório deve incluir as seguintes informações:', async function (dataTable) {
   const body = await this.response.json();
-  const campos = dataTable.hashes() as CampoRelatorio[];
-
-  campos.forEach((campo: CampoRelatorio) => {
+  const campos = dataTable.hashes();
+  
+  campos.forEach((campo: { campo: string; tipo: string }) => {
     expect(body).toHaveProperty(campo.campo);
     
     switch (campo.tipo) {

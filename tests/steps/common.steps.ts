@@ -1,6 +1,10 @@
 import { Given, Then, When } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 
+interface DadosRequest {
+  [key: string]: string | number | boolean;
+}
+
 // Steps de autenticação
 Given('que eu estou autenticado como {string}', function (papel: string) {
   this.papel = papel;
@@ -8,57 +12,111 @@ Given('que eu estou autenticado como {string}', function (papel: string) {
 
 // Steps HTTP comuns
 When('eu enviar uma requisição POST para {string}', async function (endpoint: string) {
-  const dados = endpoint.includes('membros') ? this.usuariosParaAdicionar : 
-                endpoint.includes('usuarios') ? this.dadosUsuario :
-                endpoint.includes('tarefas') ? this.dadosTarefa :
-                this.dadosProjeto;
+  const dados = endpoint.includes('usuarios') ? this.dadosUsuario :
+                endpoint.includes('sprints') ? this.dadosSprint :
+                endpoint.includes('avaliacoes-pessoais') ? this.dadosAvaliacaoPessoal :
+                endpoint.includes('avaliacoes-scrum-master') ? this.dadosAvaliacaoScrumMaster :
+                {};
+
+  // Converte strings numéricas para números e trata booleanos
+  const dadosConvertidos = Object.entries(dados).reduce<DadosRequest>((acc, [key, value]: [string, any]) => {
+    if (typeof value === 'string') {
+      if (!isNaN(Number(value))) {
+        acc[key] = Number(value);
+      } else if (value === 'Sim' || value === 'Não') {
+        acc[key] = value === 'Sim';
+      } else {
+        acc[key] = value;
+      }
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+
+  // Log dos dados enviados para debug
+  console.log('Dados enviados:', JSON.stringify(dadosConvertidos, null, 2));
                 
   this.response = await this.apiContext.post(endpoint, { 
-    data: dados,
+    data: dadosConvertidos,
     headers: {
+      'Content-Type': 'application/json',
       'x-user-role': this.papel
     }
   });
-});
 
-When('eu enviar uma requisição PATCH para {string}', async function (endpoint: string) {
-  const dados = endpoint.includes('atribuir') ? this.usuarioAtribuicao : this.statusAtualizacao;
-  this.response = await this.apiContext.patch(endpoint, { 
-    data: dados,
-    headers: {
-      'x-user-role': this.papel
-    }
-  });
+  // Log da resposta para debug
+  if (this.response.status() !== 201) {
+    const body = await this.response.json();
+    console.log('Resposta de erro:', JSON.stringify(body, null, 2));
+  }
 });
 
 When('eu enviar uma requisição GET para {string}', async function (endpoint: string) {
-  const queryParams = this.filtrosBusca ? new URLSearchParams(this.filtrosBusca).toString() : '';
-  const url = queryParams ? `${endpoint}?${queryParams}` : endpoint;
-  this.response = await this.apiContext.get(url, {
+  this.response = await this.apiContext.get(endpoint, {
     headers: {
+      'Content-Type': 'application/json',
       'x-user-role': this.papel
     }
   });
 });
 
-// Steps de validação comuns
+When('eu enviar uma requisição PUT para {string}', async function (endpoint: string) {
+  const dados = endpoint.includes('usuarios') ? this.dadosUsuario :
+                endpoint.includes('sprints') ? this.dadosAtualizacao :
+                endpoint.includes('avaliacoes-pessoais') ? this.dadosAvaliacaoPessoal :
+                endpoint.includes('avaliacoes-scrum-master') ? this.dadosAvaliacaoScrumMaster :
+                {};
+
+  // Converte strings numéricas para números e trata booleanos
+  const dadosConvertidos = Object.entries(dados).reduce<DadosRequest>((acc, [key, value]: [string, any]) => {
+    if (typeof value === 'string') {
+      if (!isNaN(Number(value))) {
+        acc[key] = Number(value);
+      } else if (value === 'Sim' || value === 'Não') {
+        acc[key] = value === 'Sim';
+      } else {
+        acc[key] = value;
+      }
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+
+  // Log dos dados enviados para debug
+  console.log('Dados enviados:', JSON.stringify(dadosConvertidos, null, 2));
+
+  this.response = await this.apiContext.put(endpoint, {
+    data: dadosConvertidos,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-role': this.papel
+    }
+  });
+
+  // Log da resposta para debug
+  if (this.response.status() !== 200) {
+    const body = await this.response.json();
+    console.log('Resposta de erro:', JSON.stringify(body, null, 2));
+  }
+});
+
+When('eu enviar uma requisição DELETE para {string}', async function (endpoint: string) {
+  this.response = await this.apiContext.delete(endpoint, {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-role': this.papel
+    }
+  });
+});
+
 Then('devo receber o status {int}', async function (status: number) {
   expect(this.response.status()).toBe(status);
 });
 
-Then('a resposta deve conter os dados do usuário', async function () {
+Then('devo receber uma mensagem de erro {string}', async function (mensagem: string) {
   const body = await this.response.json();
-  expect(body).toHaveProperty('id');
-  expect(body).toHaveProperty('nome');
-  expect(body).toHaveProperty('papel');
-});
-
-Then('que eu tenho dados inválidos do usuário:', async function (dataTable) {
-  this.dadosUsuario = dataTable.hashes()[0];
-});
-
-Then('devo receber uma mensagem de erro', async function () {
-  const body = await this.response.json();
-  expect(body).toHaveProperty('status', 'error');
-  expect(body).toHaveProperty('message');
+  const mensagemRecebida = body.message || body.error || (body.errors && body.errors[0]);
+  expect(mensagemRecebida).toBe(mensagem);
 }); 

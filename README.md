@@ -144,6 +144,56 @@ Após a execução dos testes, um relatório HTML será gerado em `cucumber-repo
 - Tempo de execução
 - Logs detalhados
 
+## Executando Testes com Docker
+
+Para garantir um ambiente consistente e isolado para execução dos testes, utilizamos Docker Compose. Siga os passos abaixo:
+
+1. Certifique-se de ter o Docker e Docker Compose instalados em sua máquina
+
+2. Inicie os containers com Docker Compose:
+```bash
+docker compose up -d
+```
+
+3. Acesse o container da aplicação:
+```bash
+docker compose exec app sh
+```
+
+4. Execute os testes dentro do container:
+```bash
+npm run test
+```
+
+O uso do Docker Compose garante que todos os serviços necessários (como banco de dados) estejam disponíveis e configurados corretamente para os testes. Isso elimina problemas de "funciona na minha máquina" e garante consistência entre diferentes ambientes de desenvolvimento.
+
+### Observações Importantes
+
+- O Docker Compose já configura todas as variáveis de ambiente necessárias
+- O banco de dados de teste é criado e configurado automaticamente
+- Os testes são executados em um ambiente isolado, não afetando seu banco de dados local
+- Os resultados dos testes e relatórios são persistidos no volume do Docker
+
+### Troubleshooting
+
+Se encontrar problemas ao executar os testes:
+
+1. Verifique se todos os containers estão rodando:
+```bash
+docker compose ps
+```
+
+2. Verifique os logs dos containers:
+```bash
+docker compose logs
+```
+
+3. Se necessário, recrie os containers:
+```bash
+docker compose down
+docker compose up -d
+```
+
 ## Integração Contínua
 
 O projeto utiliza GitHub Actions para executar os testes automaticamente em cada Pull Request. O workflow inclui:
