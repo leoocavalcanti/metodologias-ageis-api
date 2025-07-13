@@ -38,23 +38,10 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
 
-    - name: Setup environment variables
-      run: |
-        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
-        echo "PORT=3000" >> $GITHUB_ENV
-        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
-
-    - name: Create .env file
-      run: |
-        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" > .env
-        echo "PORT=3000" >> .env
-        echo "JWT_SECRET=test_secret" >> .env
-
     - name: Wait for PostgreSQL
       run: |
         timeout=30
-        until pg_isready -h localhost -p 5432 -U postgres
-        do
+        until PGPASSWORD=postgres psql -h localhost -U postgres -c '\q'; do
           if [ $timeout -le 0 ]; then
             echo "Failed to connect to PostgreSQL"
             exit 1
@@ -64,16 +51,32 @@ jobs:
           timeout=$((timeout - 1))
         done
 
+    - name: Create root user
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d metodologias_ageis_test -c "CREATE USER root WITH PASSWORD 'root' SUPERUSER;"
+
+    - name: Setup environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
+        echo "PORT=3000" >> $GITHUB_ENV
+        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
+
+    - name: Create .env file
+      run: |
+        echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" > .env
+        echo "PORT=3000" >> .env
+        echo "JWT_SECRET=test_secret" >> .env
+
     - name: Run database migrations
       run: npx prisma migrate deploy
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
 
     - name: Start API in background
       run: npm run dev &
       env:
         NODE_ENV: test
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
         PORT: 3000
         JWT_SECRET: test_secret
 
@@ -94,7 +97,7 @@ jobs:
       run: npm run test:report
       env:
         NODE_ENV: test
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
         PORT: 3000
         JWT_SECRET: test_secret
 
