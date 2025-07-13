@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/metodologias_ageis?schema=public
+      - NODE_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev
+    networks:
+      - app-network
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/metodologias_ageis?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npx prisma migrate deploy
+    networks:
+      - app-network
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@test-db:5432/metodologias_ageis_test?schema=public
+      - NODE_ENV=test
+      - API_URL=http://api:3000
+    depends_on:
+      api:
+        condition: service_started
+      test-db:
+        condition: service_healthy
+      test-migration:
+        condition: service_completed_successfully
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run test
+    networks:
+      - app-network
+
+  test-migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@test-db:5432/metodologias_ageis_test?schema=public
+      - NODE_ENV=test
+    depends_on:
+      test-db:
+        condition: service_healthy
+    command: npx prisma migrate deploy
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=metodologias_ageis
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  test-db:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=metodologias_ageis_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge 

@@ -1,0 +1,78 @@
+name: BDD Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: metodologias_ageis_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: Setup environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" >> .env
+        echo "PORT=3000" >> .env
+        echo "JWT_SECRET=test_secret" >> .env
+
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+
+    - name: Start API in background
+      run: npm run dev &
+      env:
+        NODE_ENV: test
+
+    - name: Wait for API to be ready
+      run: |
+        timeout=30
+        while ! curl -s http://localhost:3000/usuarios > /dev/null; do
+          if [ $timeout -le 0 ]; then
+            echo "API failed to start"
+            exit 1
+          fi
+          echo "Waiting for API to be ready..."
+          sleep 1
+          timeout=$((timeout - 1))
+        done
+
+    - name: Run BDD tests
+      run: npm run test:bdd
+      env:
+        NODE_ENV: test
+
+    - name: Upload test report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: cucumber-report
+        path: cucumber-report.html 
