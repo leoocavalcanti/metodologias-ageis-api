@@ -38,19 +38,49 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
 
+    - name: Wait for PostgreSQL
+      run: |
+        timeout=30
+        until PGPASSWORD=postgres psql -h localhost -U postgres -c '\q'; do
+          if [ $timeout -le 0 ]; then
+            echo "Failed to connect to PostgreSQL"
+            exit 1
+          fi
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 1
+          timeout=$((timeout - 1))
+        done
+
+    - name: Create root user
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d metodologias_ageis_test -c "CREATE USER root WITH PASSWORD 'root' SUPERUSER;"
+
     - name: Setup environment variables
       run: |
-        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/metodologias_ageis_test?schema=public" >> .env
+        echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
+        echo "PORT=3000" >> $GITHUB_ENV
+        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
+        echo "API_URL=http://localhost:3000" >> $GITHUB_ENV
+
+    - name: Create .env file
+      run: |
+        echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" > .env
         echo "PORT=3000" >> .env
         echo "JWT_SECRET=test_secret" >> .env
+        echo "API_URL=http://localhost:3000" >> .env
 
     - name: Run database migrations
       run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
 
     - name: Start API in background
       run: npm run dev &
       env:
         NODE_ENV: test
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
+        PORT: 3000
+        JWT_SECRET: test_secret
 
     - name: Wait for API to be ready
       run: |
@@ -66,12 +96,16 @@ jobs:
         done
 
     - name: Run BDD tests
-      run: npm run test:bdd
+      run: npm run test:report
       env:
         NODE_ENV: test
+        DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
+        PORT: 3000
+        JWT_SECRET: test_secret
+        API_URL: http://localhost:3000
 
     - name: Upload test report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: cucumber-report
