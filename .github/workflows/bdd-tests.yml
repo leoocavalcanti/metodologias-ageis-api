@@ -60,12 +60,14 @@ jobs:
         echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
         echo "PORT=3000" >> $GITHUB_ENV
         echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
+        echo "API_URL=http://localhost:3000" >> $GITHUB_ENV
 
     - name: Create .env file
       run: |
         echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" > .env
         echo "PORT=3000" >> .env
         echo "JWT_SECRET=test_secret" >> .env
+        echo "API_URL=http://localhost:3000" >> .env
 
     - name: Run database migrations
       run: npx prisma migrate deploy
@@ -100,6 +102,7 @@ jobs:
         DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
         PORT: 3000
         JWT_SECRET: test_secret
+        API_URL: http://localhost:3000
 
     - name: Upload test report
       uses: actions/upload-artifact@v4

@@ -14,9 +14,11 @@ class CustomWorld {
 setWorldConstructor(CustomWorld);
 
 BeforeAll(async function () {
-  // Usar a URL da API do container Docker
+  const apiUrl = process.env.API_URL || 'http://localhost:3000';
+  console.log('Usando API URL:', apiUrl);
+  
   apiContext = await request.newContext({
-    baseURL: process.env.API_URL || 'http://api:3000',
+    baseURL: apiUrl,
   });
 });
 
