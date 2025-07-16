@@ -82,16 +82,6 @@ Resposta
   "data": {
     "bySprint": [
       {
-        "sprintNumber": 1,
-        "scrumMaster": "João Silva",
-        "velocity": 28,
-        "efficiency": 93.33333333333333,
-        "completionRate": 93.33333333333333,
-        "bugResolutionRate": 66.66666666666666,
-        "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
-      },
-      {
         "sprintNumber": 5,
         "scrumMaster": "João Silva",
         "velocity": 28,
@@ -99,28 +89,21 @@ Resposta
         "completionRate": 93.33333333333333,
         "bugResolutionRate": 66.66666666666666,
         "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
-      },
-      {
-        "sprintNumber": 5,
-        "scrumMaster": "João Silva",
-        "velocity": 28,
-        "efficiency": 93.33333333333333,
-        "completionRate": 93.33333333333333,
-        "bugResolutionRate": 66.66666666666666,
-        "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
+        "endDate": "2023-01-14T00:00:00.000Z",
+        "observations": "A sprint foi bem sucedida",
+        "impediments": "Problemas com ambiente de desenvolvimento",
+        "improvements": "Melhorar comunicação entre times"
       }
     ],
-    "general": {
-      "totalSprints": 3,
+    "overallStats": {
+      "totalSprints": 1,
       "averageDeliveredPoints": 28,
       "averageEfficiency": 93.33333333333333,
       "averageCompletionRate": 93.33333333333333,
       "averageBugResolutionRate": 66.66666666666666,
       "deliveryDistribution": {
-        "onTime": 3,
-        "partially": 0,
+        "onTime": 1,
+        "partial": 0,
         "late": 0
       }
     }
