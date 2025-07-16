@@ -137,20 +137,8 @@ Resposta
 {
   "success": true,
   "data": {
-    "totalRetrospectives": 4,
+    "totalRetrospectives": 2,
     "bySprint": [
-      {
-        "sprintNumber": 1,
-        "averageProductivity": 4,
-        "averageTeamClimate": 5,
-        "averageCommunication": 3,
-        "averageObjectives": 4,
-        "averageBlockers": 2,
-        "totalResponses": 1,
-        "members": [
-          "Maria Souza"
-        ]
-      },
       {
         "sprintNumber": 5,
         "averageProductivity": 4,
@@ -158,14 +146,34 @@ Resposta
         "averageCommunication": 3,
         "averageObjectives": 4,
         "averageBlockers": 2,
-        "totalResponses": 3,
+        "totalResponses": 2,
         "members": [
-          "Maria Souza"
-        ]
+          "Joao Augusto",
+          "Maria antonia"
+        ],
+        "feedback": {
+          "whatWorked": [
+            "A comunicação diária foi eficaz sim",
+            "A comunicação teste"
+          ],
+          "whatDidntWork": [
+            "Algumas taarefas foram legais",
+            "Algumas teste"
+          ],
+          "suggestions": [
+            "Melhorar isso",
+            "Melhorar isso teste"
+          ],
+          "additionalComments": [
+            "Foi algo interessante",
+            "Foi algo iteste nteressante"
+          ]
+        }
       }
     ],
     "roleDistribution": {
-      "developer": 4
+      "designer": 1,
+      "developer": 1
     },
     "overallAverages": {
       "productivity": 4,
@@ -176,9 +184,21 @@ Resposta
     },
     "byMember": [
       {
-        "name": "Maria Souza",
+        "name": "Joao Augusto",
+        "role": "designer",
+        "totalRetrospectives": 1,
+        "averages": {
+          "productivity": 4,
+          "teamClimate": 5,
+          "communication": 3,
+          "objectives": 4,
+          "blockers": 2
+        }
+      },
+      {
+        "name": "Maria antonia",
         "role": "developer",
-        "totalRetrospectives": 4,
+        "totalRetrospectives": 1,
         "averages": {
           "productivity": 4,
           "teamClimate": 5,
