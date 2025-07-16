@@ -4,7 +4,7 @@
 
 1. Clone o repositório:
 ```bash
-git clone [url-do-repositorio]
+git clone https://github.com/leoocavalcanti/metodologias-ageis-api.git
 cd metodologias-ageis-api
 ```
 
