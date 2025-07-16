@@ -281,4 +281,4 @@ totalRetrospectives: Número de retrospectivas do membro
 
 averages: Médias das notas do membro
 
-Feedback: Retorno com dados descritivos
+feedback: Retorno com dados descritivos
