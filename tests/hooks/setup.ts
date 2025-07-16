@@ -14,7 +14,7 @@ class CustomWorld {
 setWorldConstructor(CustomWorld);
 
 BeforeAll(async function () {
-  const apiUrl = process.env.API_URL || 'http://localhost:3000';
+  const apiUrl = process.env.API_URL || 'http://localhost:8000';
   console.log('Usando API URL:', apiUrl);
   
   apiContext = await request.newContext({
@@ -29,11 +29,7 @@ Before(async function () {
 });
 
 After(async function () {
-  // Limpar dados criados durante o teste
   try {
-    await prisma.avaliacaoPessoal.deleteMany();
-    await prisma.avaliacaoScrumMaster.deleteMany();
-    await prisma.sprint.deleteMany();
     await prisma.usuario.deleteMany();
   } catch (error) {
     console.error('Erro ao limpar o banco de dados:', error);

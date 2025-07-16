@@ -11,60 +11,58 @@ datasource db {
 }
 
 model Usuario {
-  id                String             @id @default(uuid()) @db.Uuid
-  nome              String
-  papel             String
-  avaliacoesPessoais AvaliacaoPessoal[]
+  id                      String                    @id @default(uuid()) @db.Uuid
+  nome                    String                    @unique
+  papel                   String
+  retrospectivasScrumMaster RetrospectivaScrumMaster[]
+  retrospectivasTeamMember RetrospectivaTeamMember[]
 
   @@map("usuarios")
 }
 
-model Sprint {
-  id                String               @id @default(uuid()) @db.Uuid
-  numero            Int
-  dataInicio        DateTime             @map("data_inicio")
-  dataFim           DateTime             @map("data_fim")
-  encerramentoStatus String              @map("encerramento_status")
-  avaliacoesPessoais AvaliacaoPessoal[]
-  avaliacaoScrumMaster AvaliacaoScrumMaster?
+model RetrospectivaScrumMaster {
+  id             String   @id @default(uuid())
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId      String   @map("usuario_id") @db.Uuid
+  sprintNumber   Int
+  startDate      DateTime
+  endDate        DateTime
+  onTime         String   // 'sim' | 'nao' | 'parcialmente'
+  plannedPoints  Int
+  deliveredPoints Int
+  totalTasks     Int
+  completedTasks Int
+  pendingTasks   Int
+  bugsFound      Int
+  bugsResolved   Int
+  delivery       String   // 'sim' | 'parcial' | 'nao'
+  observations   String   @db.Text
+  impediments    String   @db.Text
+  improvements   String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  @@map("sprints")
+  @@map("retrospectivas_scrum_master")
 }
 
-model AvaliacaoPessoal {
-  id                     String   @id @default(uuid()) @db.Uuid
-  usuario               Usuario  @relation(fields: [idUsuario], references: [id])
-  idUsuario             String   @map("id_usuario") @db.Uuid
-  sprint                Sprint   @relation(fields: [idSprint], references: [id])
-  idSprint              String   @map("id_sprint") @db.Uuid
-  produtividade         Int
-  climaEquipe           Int      @map("clima_equipe")
-  comunicacao           Int
-  objetivosClaros       Int      @map("objetivos_claros")
-  teveBloqueios         Int      @map("teve_bloqueios")
-  queFuncionou          String   @map("o_que_funcionou")
-  queNaoFuncionou       String   @map("o_que_nao_funcionou")
-  sugestoesProximaSprint String   @map("sugestoes_proxima_sprint")
-  comentariosAdicionais String?  @map("comentarios_adicionais")
+model RetrospectivaTeamMember {
+  id                String   @id @default(uuid())
+  usuario           Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId         String   @map("usuario_id") @db.Uuid
+  role              String   // 'developer' | 'qa' | 'po' | 'scrum-master' | 'other'
+  otherRole         String?
+  sprintNumber      Int
+  productivity      Int
+  teamClimate       Int
+  communication     Int
+  objectives        Int
+  blockers          Int
+  whatWorked        String   @db.Text
+  whatDidntWork     String   @db.Text
+  suggestions       String   @db.Text
+  additionalComments String? @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  @@map("avaliacoes_pessoais")
-}
-
-model AvaliacaoScrumMaster {
-  id                    String   @id @default(uuid()) @db.Uuid
-  sprint               Sprint   @relation(fields: [idSprint], references: [id])
-  idSprint             String   @unique @map("id_sprint") @db.Uuid
-  pontosPlanejados     Int      @map("pontos_planejados")
-  pontosEntregues      Int      @map("pontos_entregues")
-  tarefasPlanejadas    Int      @map("tarefas_planejadas")
-  tarefasConcluidas    Int      @map("tarefas_concluidas")
-  tarefasPendentes     Int      @map("tarefas_pendentes")
-  bugsIdentificados    Int      @map("bugs_identificados")
-  bugsResolvidos       Int      @map("bugs_resolvidos")
-  houveEntrega         String   @map("houve_entrega")
-  observacoesGerais    String   @map("observacoes_gerais")
-  principaisImpedimentos String  @map("principais_impedimentos")
-  melhoriasImplementadas String  @map("melhorias_implementadas")
-
-  @@map("avaliacoes_scrum_master")
+  @@map("retrospectivas_team_member")
 } 

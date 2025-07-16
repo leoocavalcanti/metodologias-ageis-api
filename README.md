@@ -1,23 +1,4 @@
-# API de Avaliações de Sprint
-
-API para gerenciamento de avaliações de sprint, incluindo avaliações pessoais dos membros da equipe e avaliações do Scrum Master.
-
-## Tecnologias Utilizadas
-
-- Node.js
-- TypeScript
-- Express
-- Prisma (ORM)
-- PostgreSQL
-- Zod (Validação)
-- Cucumber (BDD)
-- Playwright (Testes de API)
-
-## Pré-requisitos
-
-- Node.js (versão 18 ou superior)
-- PostgreSQL
-- npm ou yarn
+# API de Retrospectivas
 
 ## Instalação
 
@@ -27,191 +8,249 @@ git clone [url-do-repositorio]
 cd metodologias-ageis-api
 ```
 
-2. Instale as dependências:
+2. Como inciar o projeto
+
 ```bash
-npm install
-# ou
-yarn
+docker compose up --build
 ```
 
-3. Configure as variáveis de ambiente:
-- Copie o arquivo `.env.example` para `.env`
-- Ajuste as variáveis conforme seu ambiente:
-  ```
-  DATABASE_URL="postgresql://seu_usuario:sua_senha@localhost:5432/metodologias_ageis?schema=public"
-  JWT_SECRET="seu_jwt_secret_aqui"
-  PORT=3000
-  ```
+Isso irá configurar todo o ambiente, incluindo:
 
-4. Execute as migrações do banco de dados:
+Endpoints Principais
+1. Criar Retrospectiva do Scrum Master
+POST /retrospectives/scrum-master
+
+Exemplo de Request:
+
 ```bash
-npx prisma migrate dev
+{
+  "nome": "João Silva",
+  "papel": "Scrum Master",
+  "sprintNumber": 5,
+  "startDate": "2023-01-01",
+  "endDate": "2023-01-14",
+  "onTime": "sim",
+  "plannedPoints": 30,
+  "deliveredPoints": 28,
+  "totalTasks": 15,
+  "completedTasks": 14,
+  "pendingTasks": 1,
+  "bugsFound": 3,
+  "bugsResolved": 2,
+  "delivery": "sim",
+  "observations": "Sprint bem sucedida",
+  "impediments": "Problemas com ambiente",
+  "improvements": "Melhorar comunicação"
+}
 ```
 
-5. Inicie o servidor:
+2. Criar Retrospectiva de Membro
+POST /retrospectives/team-member
+
+Exemplo de Request:
 ```bash
-npm run dev
-# ou
-yarn dev
+{
+  "name": "Maria Souza",
+  "role": "developer",
+  "sprintNumber": 5,
+  "productivity": 4,
+  "teamClimate": 5,
+  "communication": 3,
+  "objectives": 4,
+  "blockers": 2,
+  "whatWorked": "Daily eficaz",
+  "whatDidntWork": "Tarefas mal definidas",
+  "suggestions": "Melhorar definição de pronto"
+}
 ```
 
-## Estrutura do Projeto
+Consultar Estatísticas
+1. Estatísticas do Scrum Master
+GET /retrospectives/scrum-master-stats
 
-```
-src/
-  ├── controllers/     # Controladores da aplicação
-  ├── middlewares/    # Middlewares do Express
-  ├── routes/         # Rotas da API
-  ├── lib/           # Configurações e utilitários
-  └── server.ts      # Arquivo principal
 
-tests/
-  ├── features/      # Arquivos .feature com cenários BDD
-  ├── steps/         # Implementação dos steps do BDD
-  └── hooks/         # Hooks para setup e teardown dos testes
-```
-
-## Endpoints da API
-
-### Usuários
-
-- `POST /usuarios` - Criar usuário
-- `GET /usuarios` - Listar usuários
-- `GET /usuarios/:id` - Buscar usuário por ID
-- `PUT /usuarios/:id` - Atualizar usuário
-- `DELETE /usuarios/:id` - Remover usuário
-
-### Sprints
-
-- `POST /sprints` - Criar sprint
-- `GET /sprints` - Listar sprints
-- `GET /sprints/:id` - Buscar sprint por ID
-- `PUT /sprints/:id` - Atualizar sprint
-- `DELETE /sprints/:id` - Remover sprint
-
-### Avaliações Pessoais
-
-- `POST /avaliacoes-pessoais` - Criar avaliação pessoal
-- `GET /avaliacoes-pessoais` - Listar avaliações pessoais
-- `GET /avaliacoes-pessoais/:id` - Buscar avaliação por ID
-- `PUT /avaliacoes-pessoais/:id` - Atualizar avaliação
-- `DELETE /avaliacoes-pessoais/:id` - Remover avaliação
-
-### Avaliações do Scrum Master
-
-- `POST /avaliacoes-scrum-master` - Criar avaliação do Scrum Master
-- `GET /avaliacoes-scrum-master` - Listar avaliações do Scrum Master
-- `GET /avaliacoes-scrum-master/:id` - Buscar avaliação por ID
-- `PUT /avaliacoes-scrum-master/:id` - Atualizar avaliação
-- `DELETE /avaliacoes-scrum-master/:id` - Remover avaliação
-
-## Scripts Disponíveis
-
-- `npm run dev` - Inicia o servidor em modo de desenvolvimento
-- `npm run build` - Compila o projeto para produção
-- `npm start` - Inicia o servidor em modo de produção
-- `npm run test:bdd` - Executa os testes BDD
-
-## Testes BDD
-
-O projeto utiliza Cucumber para testes BDD (Behavior Driven Development) em conjunto com Playwright para testes de API. Os testes são executados automaticamente em cada Pull Request através do GitHub Actions.
-
-### Estrutura dos Testes
-
-- `tests/features/*.feature` - Arquivos com cenários de teste em linguagem Gherkin
-- `tests/steps/*.ts` - Implementação dos steps dos testes
-- `tests/hooks/*.ts` - Configuração e limpeza do ambiente de testes
-
-### Executando os Testes
-
-1. Certifique-se de que a API está rodando:
+Resposta
 ```bash
-npm run dev
+{
+  "success": true,
+  "data": {
+    "bySprint": [
+      {
+        "sprintNumber": 1,
+        "scrumMaster": "João Silva",
+        "velocity": 28,
+        "efficiency": 93.33333333333333,
+        "completionRate": 93.33333333333333,
+        "bugResolutionRate": 66.66666666666666,
+        "startDate": "2023-01-01T00:00:00.000Z",
+        "endDate": "2023-01-14T00:00:00.000Z"
+      },
+      {
+        "sprintNumber": 5,
+        "scrumMaster": "João Silva",
+        "velocity": 28,
+        "efficiency": 93.33333333333333,
+        "completionRate": 93.33333333333333,
+        "bugResolutionRate": 66.66666666666666,
+        "startDate": "2023-01-01T00:00:00.000Z",
+        "endDate": "2023-01-14T00:00:00.000Z"
+      },
+      {
+        "sprintNumber": 5,
+        "scrumMaster": "João Silva",
+        "velocity": 28,
+        "efficiency": 93.33333333333333,
+        "completionRate": 93.33333333333333,
+        "bugResolutionRate": 66.66666666666666,
+        "startDate": "2023-01-01T00:00:00.000Z",
+        "endDate": "2023-01-14T00:00:00.000Z"
+      }
+    ],
+    "general": {
+      "totalSprints": 3,
+      "averageDeliveredPoints": 28,
+      "averageEfficiency": 93.33333333333333,
+      "averageCompletionRate": 93.33333333333333,
+      "averageBugResolutionRate": 66.66666666666666,
+      "deliveryDistribution": {
+        "onTime": 3,
+        "partially": 0,
+        "late": 0
+      }
+    }
+  }
+}
 ```
 
-2. Em outro terminal, execute os testes:
+2. Estatísticas da Equipe
+GET /retrospectives/team-member-stats
+
+
+Resposta
 ```bash
-npm run test:bdd
+{
+  "success": true,
+  "data": {
+    "totalRetrospectives": 4,
+    "bySprint": [
+      {
+        "sprintNumber": 1,
+        "averageProductivity": 4,
+        "averageTeamClimate": 5,
+        "averageCommunication": 3,
+        "averageObjectives": 4,
+        "averageBlockers": 2,
+        "totalResponses": 1,
+        "members": [
+          "Maria Souza"
+        ]
+      },
+      {
+        "sprintNumber": 5,
+        "averageProductivity": 4,
+        "averageTeamClimate": 5,
+        "averageCommunication": 3,
+        "averageObjectives": 4,
+        "averageBlockers": 2,
+        "totalResponses": 3,
+        "members": [
+          "Maria Souza"
+        ]
+      }
+    ],
+    "roleDistribution": {
+      "developer": 4
+    },
+    "overallAverages": {
+      "productivity": 4,
+      "teamClimate": 5,
+      "communication": 3,
+      "objectives": 4,
+      "blockers": 2
+    },
+    "byMember": [
+      {
+        "name": "Maria Souza",
+        "role": "developer",
+        "totalRetrospectives": 4,
+        "averages": {
+          "productivity": 4,
+          "teamClimate": 5,
+          "communication": 3,
+          "objectives": 4,
+          "blockers": 2
+        }
+      }
+    ]
+  }
+}
 ```
 
-### Relatório de Testes
+📌 Exemplos Práticos
+Consultando um intervalo específico:
+bash
+GET /retrospectives/scrum-master-stats?initialSprint=3&finalSprint=7
+Retorna dados apenas das sprints 3 a 7.
 
-Após a execução dos testes, um relatório HTML será gerado em `cucumber-report.html`. Este relatório contém informações detalhadas sobre os testes executados, incluindo:
+Consultando uma sprint específica:
+bash
+GET /retrospectives/team-member-stats?initialSprint=5&finalSprint=5
+Retorna dados apenas da sprint 5.
 
-- Cenários executados
-- Status de cada cenário (passou/falhou)
-- Screenshots em caso de falha
-- Tempo de execução
-- Logs detalhados
+💡 Dica: Utilize os filtros initialSprint e finalSprint para analisar períodos específicos do seu projeto!
 
-## Executando Testes com Docker
+# Explicação de Campos (Scrum Master)
 
-Para garantir um ambiente consistente e isolado para execução dos testes, utilizamos Docker Compose. Siga os passos abaixo:
+bySprint: Array com estatísticas por sprint
 
-1. Certifique-se de ter o Docker e Docker Compose instalados em sua máquina
+sprintNumber: Número da sprint
 
-2. Inicie os containers com Docker Compose:
-```bash
-docker compose up -d
-```
+scrumMaster: Nome do Scrum Master
 
-3. Acesse o container da aplicação:
-```bash
-docker compose exec app sh
-```
+velocity: Pontos entregues (velocity)
 
-4. Execute os testes dentro do container:
-```bash
-npm run test
-```
+efficiency: Eficiência (pontos entregues/pontos planejados)
 
-O uso do Docker Compose garante que todos os serviços necessários (como banco de dados) estejam disponíveis e configurados corretamente para os testes. Isso elimina problemas de "funciona na minha máquina" e garante consistência entre diferentes ambientes de desenvolvimento.
+completionRate: Taxa de conclusão (tarefas completadas/total)
 
-### Observações Importantes
+bugResolutionRate: Taxa de resolução de bugs (bugs resolvidos/bugs encontrados)
 
-- O Docker Compose já configura todas as variáveis de ambiente necessárias
-- O banco de dados de teste é criado e configurado automaticamente
-- Os testes são executados em um ambiente isolado, não afetando seu banco de dados local
-- Os resultados dos testes e relatórios são persistidos no volume do Docker
+startDate: Data de início
 
-### Troubleshooting
+endDate: Data de término
 
-Se encontrar problemas ao executar os testes:
+overallStats: Estatísticas consolidadas
 
-1. Verifique se todos os containers estão rodando:
-```bash
-docker compose ps
-```
+totalSprints: Total de sprints consideradas
 
-2. Verifique os logs dos containers:
-```bash
-docker compose logs
-```
+average*: Médias das métricas
 
-3. Se necessário, recrie os containers:
-```bash
-docker compose down
-docker compose up -d
-```
+deliveryDistribution: Distribuição de entregas (no prazo, parcial, atrasada)
 
-## Integração Contínua
+# Explicação dos Campos (Equipe)
 
-O projeto utiliza GitHub Actions para executar os testes automaticamente em cada Pull Request. O workflow inclui:
+totalRetrospectives: Total de retrospectivas consideradas
 
-1. Setup do ambiente (Node.js, PostgreSQL)
-2. Instalação de dependências
-3. Execução das migrações do banco
-4. Execução dos testes BDD
-5. Geração e upload do relatório de testes
+bySprint: Estatísticas agrupadas por sprint
 
-## Contribuição
+sprintNumber: Número da sprint
 
-1. Faça o fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
+average*: Médias das notas por categoria
 
-## Licença
+totalResponses: Número de respostas na sprint
 
-Este projeto está sob a licença ISC. 
+members: Nomes dos membros que responderam
+
+roleDistribution: Distribuição de funções/papéis
+
+overallAverages: Médias gerais de todas as retrospectivas
+
+byMember: Estatísticas detalhadas por membro
+
+name: Nome do membro
+
+role: Função do membro
+
+totalRetrospectives: Número de retrospectivas do membro
+
+averages: Médias das notas do membro
