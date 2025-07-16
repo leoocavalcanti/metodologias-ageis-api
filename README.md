@@ -15,6 +15,12 @@ docker compose up --build
 ```
 
 Isso irá configurar todo o ambiente, incluindo:
+- Banco de dados PostgreSQL
+
+- API na porta 8000
+
+- Documentação interativa em http://localhost:8000/docs
+
 
 Endpoints Principais
 1. Criar Retrospectiva do Scrum Master
