@@ -58,16 +58,16 @@ jobs:
     - name: Setup environment variables
       run: |
         echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" >> $GITHUB_ENV
-        echo "PORT=3000" >> $GITHUB_ENV
+        echo "PORT=8000" >> $GITHUB_ENV
         echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
-        echo "API_URL=http://localhost:3000" >> $GITHUB_ENV
+        echo "API_URL=http://localhost:8000" >> $GITHUB_ENV
 
     - name: Create .env file
       run: |
         echo "DATABASE_URL=postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public" > .env
-        echo "PORT=3000" >> .env
+        echo "PORT=8000" >> .env
         echo "JWT_SECRET=test_secret" >> .env
-        echo "API_URL=http://localhost:3000" >> .env
+        echo "API_URL=http://localhost:8000" >> .env
 
     - name: Run database migrations
       run: npx prisma migrate deploy
@@ -79,13 +79,13 @@ jobs:
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
-        PORT: 3000
+        PORT: 8000
         JWT_SECRET: test_secret
 
     - name: Wait for API to be ready
       run: |
         timeout=30
-        while ! curl -s http://localhost:3000/usuarios > /dev/null; do
+        while ! curl -s http://localhost:8000/usuarios > /dev/null; do
           if [ $timeout -le 0 ]; then
             echo "API failed to start"
             exit 1
@@ -100,9 +100,9 @@ jobs:
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://root:root@localhost:5432/metodologias_ageis_test?schema=public
-        PORT: 3000
+        PORT: 8000
         JWT_SECRET: test_secret
-        API_URL: http://localhost:3000
+        API_URL: http://localhost:8000
 
     - name: Upload test report
       uses: actions/upload-artifact@v4
