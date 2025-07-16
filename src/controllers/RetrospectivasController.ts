@@ -248,11 +248,11 @@ export class RetrospectivasController {
     }
   }
 
-  /**
+ /**
  * @swagger
  * /retrospectives/scrum-master-stats:
  *   get:
- *     summary: Get Scrum Master retrospective statistics
+ *     summary: Get Scrum Master retrospective statistics including qualitative feedback
  *     tags: [Retrospectives]
  *     security:
  *       - bearerAuth: []
@@ -303,6 +303,12 @@ export class RetrospectivasController {
  *                           endDate:
  *                             type: string
  *                             format: date-time
+ *                           observations:
+ *                             type: string
+ *                           impediments:
+ *                             type: string
+ *                           improvements:
+ *                             type: string
  *                     overallStats:
  *                       type: object
  *                       properties:
@@ -325,6 +331,21 @@ export class RetrospectivasController {
  *                               type: integer
  *                             late:
  *                               type: integer
+ *                     qualitativeFeedback:
+ *                       type: object
+ *                       properties:
+ *                         observations:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         impediments:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         improvements:
+ *                           type: array
+ *                           items:
+ *                             type: string
  *       400:
  *         description: Invalid parameters
  *         content:
@@ -370,12 +391,100 @@ async getScrumMasterStats(req: Request, res: Response) {
       });
     }
 
-    const stats = await this.retrospectivaModel.obterEstatisticasScrumMaster(filters);
-    
-    return res.status(200).json({
-      success: true,
-      data: stats
+    // Get data from model including qualitative fields
+    const retrospectives = await prisma.retrospectivaScrumMaster.findMany({
+      where: filters ? {
+        sprintNumber: {
+          gte: filters.initialSprint,
+          lte: filters.finalSprint
+        }
+      } : {},
+      include: {
+        usuario: true
+      },
+      orderBy: {
+        sprintNumber: 'asc'
+      }
     });
+
+    // If no retrospectives, return empty
+    if (retrospectives.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          bySprint: [],
+          overallStats: {
+            totalSprints: 0,
+            averageDeliveredPoints: 0,
+            averageEfficiency: 0,
+            averageCompletionRate: 0,
+            averageBugResolutionRate: 0,
+            deliveryDistribution: {
+              onTime: 0,
+              partial: 0,
+              late: 0
+            }
+          },
+          qualitativeFeedback: {
+            observations: [],
+            impediments: [],
+            improvements: []
+          }
+        }
+      });
+    }
+
+    // Process sprint data including qualitative feedback
+    const bySprint = retrospectives.map(retro => ({
+      sprintNumber: retro.sprintNumber,
+      scrumMaster: retro.usuario.nome,
+      velocity: retro.deliveredPoints,
+      efficiency: (retro.deliveredPoints / retro.plannedPoints) * 100,
+      completionRate: (retro.completedTasks / retro.totalTasks) * 100,
+      bugResolutionRate: (retro.bugsResolved / retro.bugsFound) * 100,
+      startDate: retro.startDate,
+      endDate: retro.endDate,
+      observations: retro.observations,
+      impediments: retro.impediments,
+      improvements: retro.improvements
+    }));
+
+    // Collect all qualitative feedback
+    const allObservations: string[] = [];
+    const allImpediments: string[] = [];
+    const allImprovements: string[] = [];
+
+    retrospectives.forEach(retro => {
+      if (retro.observations) allObservations.push(retro.observations);
+      if (retro.impediments) allImpediments.push(retro.impediments);
+      if (retro.improvements) allImprovements.push(retro.improvements);
+    });
+
+    // Calculate overall stats
+    const totalSprints = retrospectives.length;
+    const overallStats = {
+      totalSprints,
+      averageDeliveredPoints: retrospectives.reduce((acc, r) => acc + r.deliveredPoints, 0) / totalSprints,
+      averageEfficiency: retrospectives.reduce((acc, r) => acc + ((r.deliveredPoints / r.plannedPoints) * 100), 0) / totalSprints,
+      averageCompletionRate: retrospectives.reduce((acc, r) => acc + ((r.completedTasks / r.totalTasks) * 100), 0) / totalSprints,
+      averageBugResolutionRate: retrospectives.reduce((acc, r) => acc + ((r.bugsResolved / r.bugsFound) * 100), 0) / totalSprints,
+      deliveryDistribution: {
+        onTime: retrospectives.filter(r => r.onTime === 'sim').length,
+        partial: retrospectives.filter(r => r.onTime === 'parcialmente').length,
+        late: retrospectives.filter(r => r.onTime === 'nao').length
+      }
+    };
+
+    // Prepare final response
+    const response = {
+      success: true,
+      data: {
+        bySprint,
+        overallStats,
+      }
+    };
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error('Error getting Scrum Master statistics:', error);
     return res.status(500).json({
@@ -385,11 +494,11 @@ async getScrumMasterStats(req: Request, res: Response) {
   }
 }
 
-  /**
+/**
  * @swagger
  * /retrospectives/team-member-stats:
  *   get:
- *     summary: Get team member retrospective statistics
+ *     summary: Get team member retrospective statistics including qualitative feedback
  *     tags: [Retrospectives]
  *     security:
  *       - bearerAuth: []
@@ -459,6 +568,25 @@ async getScrumMasterStats(req: Request, res: Response) {
  *                           type: number
  *                         blockers:
  *                           type: number
+ *                     qualitativeFeedback:
+ *                       type: object
+ *                       properties:
+ *                         whatWorked:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         whatDidntWork:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         suggestions:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         additionalComments:
+ *                           type: array
+ *                           items:
+ *                             type: string
  *                     byMember:
  *                       type: array
  *                       items:
@@ -483,6 +611,25 @@ async getScrumMasterStats(req: Request, res: Response) {
  *                                 type: number
  *                               blockers:
  *                                 type: number
+ *                           feedback:
+ *                             type: object
+ *                             properties:
+ *                               whatWorked:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                               whatDidntWork:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                               suggestions:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                               additionalComments:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
  *       400:
  *         description: Invalid parameters
  *         content:
@@ -500,7 +647,7 @@ async getTeamMemberStats(req: Request, res: Response) {
   try {
     const { initialSprint, finalSprint } = req.query;
 
-    // Validate filters
+    // Validate filters (same as before)
     if ((initialSprint && !finalSprint) || (!initialSprint && finalSprint)) {
       return res.status(400).json({
         success: false,
@@ -558,12 +705,18 @@ async getTeamMemberStats(req: Request, res: Response) {
             objectives: 0,
             blockers: 0
           },
+          qualitativeFeedback: {
+            whatWorked: [],
+            whatDidntWork: [],
+            suggestions: [],
+            additionalComments: []
+          },
           byMember: []
         }
       });
     }
 
-    // Group by sprint using Map
+    // Group by sprint using Map (same as before)
     const sprintsMap = new Map<number, {
       sprintNumber: number;
       sumProductivity: number;
@@ -573,7 +726,17 @@ async getTeamMemberStats(req: Request, res: Response) {
       sumBlockers: number;
       totalResponses: number;
       members: Set<string>;
+      whatWorked: string[];
+      whatDidntWork: string[];
+      suggestions: string[];
+      additionalComments: string[];
     }>();
+
+    // Arrays to collect all qualitative feedback
+    const allWhatWorked: string[] = [];
+    const allWhatDidntWork: string[] = [];
+    const allSuggestions: string[] = [];
+    const allAdditionalComments: string[] = [];
 
     retrospectives.forEach(retro => {
       if (!sprintsMap.has(retro.sprintNumber)) {
@@ -585,7 +748,11 @@ async getTeamMemberStats(req: Request, res: Response) {
           sumObjectives: 0,
           sumBlockers: 0,
           totalResponses: 0,
-          members: new Set()
+          members: new Set(),
+          whatWorked: [],
+          whatDidntWork: [],
+          suggestions: [],
+          additionalComments: []
         });
       }
 
@@ -597,9 +764,21 @@ async getTeamMemberStats(req: Request, res: Response) {
       sprint.sumBlockers += retro.blockers;
       sprint.totalResponses++;
       sprint.members.add(retro.usuario.nome);
+      
+      // Collect qualitative feedback per sprint
+      if (retro.whatWorked) sprint.whatWorked.push(retro.whatWorked);
+      if (retro.whatDidntWork) sprint.whatDidntWork.push(retro.whatDidntWork);
+      if (retro.suggestions) sprint.suggestions.push(retro.suggestions);
+      if (retro.additionalComments) sprint.additionalComments.push(retro.additionalComments);
+
+      // Collect all qualitative feedback
+      if (retro.whatWorked) allWhatWorked.push(retro.whatWorked);
+      if (retro.whatDidntWork) allWhatDidntWork.push(retro.whatDidntWork);
+      if (retro.suggestions) allSuggestions.push(retro.suggestions);
+      if (retro.additionalComments) allAdditionalComments.push(retro.additionalComments);
     });
 
-    // Convert to array and calculate averages
+    // Convert to array and calculate averages (same as before)
     const bySprint = Array.from(sprintsMap.values()).map(sprint => ({
       sprintNumber: sprint.sprintNumber,
       averageProductivity: parseFloat((sprint.sumProductivity / sprint.totalResponses).toFixed(2)),
@@ -608,19 +787,25 @@ async getTeamMemberStats(req: Request, res: Response) {
       averageObjectives: parseFloat((sprint.sumObjectives / sprint.totalResponses).toFixed(2)),
       averageBlockers: parseFloat((sprint.sumBlockers / sprint.totalResponses).toFixed(2)),
       totalResponses: sprint.totalResponses,
-      members: Array.from(sprint.members)
+      members: Array.from(sprint.members),
+      feedback: {
+        whatWorked: sprint.whatWorked,
+        whatDidntWork: sprint.whatDidntWork,
+        suggestions: sprint.suggestions,
+        additionalComments: sprint.additionalComments
+      }
     }));
 
     // Sort by sprintNumber
     bySprint.sort((a, b) => a.sprintNumber - b.sprintNumber);
 
-    // Role distribution
+    // Role distribution (same as before)
     const roleDistribution = retrospectives.reduce((acc: Record<string, number>, retro) => {
       acc[retro.role] = (acc[retro.role] || 0) + 1;
       return acc;
     }, {});
 
-    // Overall averages
+    // Overall averages (same as before)
     const totalRetrospectives = retrospectives.length;
     const overallAverages = {
       productivity: parseFloat((retrospectives.reduce((sum, r) => sum + r.productivity, 0) / totalRetrospectives).toFixed(2)),
@@ -640,6 +825,10 @@ async getTeamMemberStats(req: Request, res: Response) {
       sumCommunication: number;
       sumObjectives: number;
       sumBlockers: number;
+      whatWorked: string[];
+      whatDidntWork: string[];
+      suggestions: string[];
+      additionalComments: string[];
     }>();
 
     retrospectives.forEach(retro => {
@@ -653,7 +842,11 @@ async getTeamMemberStats(req: Request, res: Response) {
           sumTeamClimate: 0,
           sumCommunication: 0,
           sumObjectives: 0,
-          sumBlockers: 0
+          sumBlockers: 0,
+          whatWorked: [],
+          whatDidntWork: [],
+          suggestions: [],
+          additionalComments: []
         });
       }
 
@@ -664,6 +857,12 @@ async getTeamMemberStats(req: Request, res: Response) {
       member.sumCommunication += retro.communication;
       member.sumObjectives += retro.objectives;
       member.sumBlockers += retro.blockers;
+      
+      // Collect member's qualitative feedback
+      if (retro.whatWorked) member.whatWorked.push(retro.whatWorked);
+      if (retro.whatDidntWork) member.whatDidntWork.push(retro.whatDidntWork);
+      if (retro.suggestions) member.suggestions.push(retro.suggestions);
+      if (retro.additionalComments) member.additionalComments.push(retro.additionalComments);
     });
 
     // Calculate member averages
@@ -677,7 +876,7 @@ async getTeamMemberStats(req: Request, res: Response) {
         communication: parseFloat((member.sumCommunication / member.totalRetrospectives).toFixed(2)),
         objectives: parseFloat((member.sumObjectives / member.totalRetrospectives).toFixed(2)),
         blockers: parseFloat((member.sumBlockers / member.totalRetrospectives).toFixed(2))
-      }
+      },
     }));
 
     // Sort members by name
