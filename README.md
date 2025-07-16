@@ -4,7 +4,7 @@
 
 1. Clone o repositório:
 ```bash
-git clone [url-do-repositorio]
+git clone https://github.com/leoocavalcanti/metodologias-ageis-api.git
 cd metodologias-ageis-api
 ```
 
@@ -15,6 +15,12 @@ docker compose up --build
 ```
 
 Isso irá configurar todo o ambiente, incluindo:
+- Banco de dados PostgreSQL
+
+- API na porta 8000
+
+- Documentação interativa em http://localhost:8000/docs
+
 
 Endpoints Principais
 1. Criar Retrospectiva do Scrum Master
@@ -76,16 +82,6 @@ Resposta
   "data": {
     "bySprint": [
       {
-        "sprintNumber": 1,
-        "scrumMaster": "João Silva",
-        "velocity": 28,
-        "efficiency": 93.33333333333333,
-        "completionRate": 93.33333333333333,
-        "bugResolutionRate": 66.66666666666666,
-        "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
-      },
-      {
         "sprintNumber": 5,
         "scrumMaster": "João Silva",
         "velocity": 28,
@@ -93,28 +89,21 @@ Resposta
         "completionRate": 93.33333333333333,
         "bugResolutionRate": 66.66666666666666,
         "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
-      },
-      {
-        "sprintNumber": 5,
-        "scrumMaster": "João Silva",
-        "velocity": 28,
-        "efficiency": 93.33333333333333,
-        "completionRate": 93.33333333333333,
-        "bugResolutionRate": 66.66666666666666,
-        "startDate": "2023-01-01T00:00:00.000Z",
-        "endDate": "2023-01-14T00:00:00.000Z"
+        "endDate": "2023-01-14T00:00:00.000Z",
+        "observations": "A sprint foi bem sucedida",
+        "impediments": "Problemas com ambiente de desenvolvimento",
+        "improvements": "Melhorar comunicação entre times"
       }
     ],
-    "general": {
-      "totalSprints": 3,
+    "overallStats": {
+      "totalSprints": 1,
       "averageDeliveredPoints": 28,
       "averageEfficiency": 93.33333333333333,
       "averageCompletionRate": 93.33333333333333,
       "averageBugResolutionRate": 66.66666666666666,
       "deliveryDistribution": {
-        "onTime": 3,
-        "partially": 0,
+        "onTime": 1,
+        "partial": 0,
         "late": 0
       }
     }
@@ -131,20 +120,8 @@ Resposta
 {
   "success": true,
   "data": {
-    "totalRetrospectives": 4,
+    "totalRetrospectives": 2,
     "bySprint": [
-      {
-        "sprintNumber": 1,
-        "averageProductivity": 4,
-        "averageTeamClimate": 5,
-        "averageCommunication": 3,
-        "averageObjectives": 4,
-        "averageBlockers": 2,
-        "totalResponses": 1,
-        "members": [
-          "Maria Souza"
-        ]
-      },
       {
         "sprintNumber": 5,
         "averageProductivity": 4,
@@ -152,14 +129,34 @@ Resposta
         "averageCommunication": 3,
         "averageObjectives": 4,
         "averageBlockers": 2,
-        "totalResponses": 3,
+        "totalResponses": 2,
         "members": [
-          "Maria Souza"
-        ]
+          "Joao Augusto",
+          "Maria antonia"
+        ],
+        "feedback": {
+          "whatWorked": [
+            "A comunicação diária foi eficaz sim",
+            "A comunicação teste"
+          ],
+          "whatDidntWork": [
+            "Algumas taarefas foram legais",
+            "Algumas teste"
+          ],
+          "suggestions": [
+            "Melhorar isso",
+            "Melhorar isso teste"
+          ],
+          "additionalComments": [
+            "Foi algo interessante",
+            "Foi algo iteste nteressante"
+          ]
+        }
       }
     ],
     "roleDistribution": {
-      "developer": 4
+      "designer": 1,
+      "developer": 1
     },
     "overallAverages": {
       "productivity": 4,
@@ -170,9 +167,21 @@ Resposta
     },
     "byMember": [
       {
-        "name": "Maria Souza",
+        "name": "Joao Augusto",
+        "role": "designer",
+        "totalRetrospectives": 1,
+        "averages": {
+          "productivity": 4,
+          "teamClimate": 5,
+          "communication": 3,
+          "objectives": 4,
+          "blockers": 2
+        }
+      },
+      {
+        "name": "Maria antonia",
         "role": "developer",
-        "totalRetrospectives": 4,
+        "totalRetrospectives": 1,
         "averages": {
           "productivity": 4,
           "teamClimate": 5,
@@ -254,3 +263,5 @@ role: Função do membro
 totalRetrospectives: Número de retrospectivas do membro
 
 averages: Médias das notas do membro
+
+feedback: Retorno com dados descritivos
